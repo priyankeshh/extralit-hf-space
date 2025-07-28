@@ -40,10 +40,10 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           build-args: |
             ARGILLA_SERVER_IMAGE=extralit/argilla-server
             ARGILLA_VERSION=${{ env.IMAGE_TAG }}
           tags: |
-            extralit/argilla-hf-spaces:${{ env.IMAGE_TAG }}
+            extralit/extralit-hf-space:${{ env.IMAGE_TAG }}
           push: true
