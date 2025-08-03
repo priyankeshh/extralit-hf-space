@@ -23,6 +23,21 @@ jobs:
             TAG="latest"
           fi
           echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+      - name: Set variables based on release flag
+        run: |
+          if [[ "${{ github.event_name }}" == "repository_dispatch" ]] && [[ "${{ github.event.client_payload.is_release }}" == "true" ]]; then
+            echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
+            echo "REPO=extralit/extralit-hf-space" >> $GITHUB_ENV
+            echo "EXTRALIT_SERVER_IMAGE=extralit/argilla-server" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD }}" >> $GITHUB_ENV
+          else
+            echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
+            echo "REPO=extralitdev/extralit-hf-space" >> $GITHUB_ENV
+            echo "EXTRALIT_SERVER_IMAGE=extralitdev/argilla-server" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME_DEV }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD_DEV }}" >> $GITHUB_ENV
+          fi
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -33,17 +48,17 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.AR_DOCKER_USERNAME }}
-          password: ${{ secrets.AR_DOCKER_PASSWORD }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
 
       - name: Build & push HF-Space Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64
+          platforms: ${{ env.PLATFORMS }}
           build-args: |
-            ARGILLA_SERVER_IMAGE=extralit/argilla-server
-            ARGILLA_VERSION=${{ env.IMAGE_TAG }}
+            EXTRALIT_SERVER_IMAGE=${{ env.EXTRALIT_SERVER_IMAGE }}
+            EXTRALIT_VERSION=${{ env.IMAGE_TAG }}
           tags: |
-            extralit/extralit-hf-space:${{ env.IMAGE_TAG }}
+            ${{ env.REPO }}:${{ env.IMAGE_TAG }}
           push: true

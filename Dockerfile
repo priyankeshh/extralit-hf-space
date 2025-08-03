@@ -1,9 +1,9 @@
 # Multi‐stage build to reduce image size
-ARG ARGILLA_VERSION=latest
-ARG ARGILLA_SERVER_IMAGE=extralit/argilla-server
+ARG EXTRALIT_VERSION=latest
+ARG EXTRALIT_SERVER_IMAGE=extralit/argilla-server
 
 # Base stage with common dependencies from Argilla server
-FROM ${ARGILLA_SERVER_IMAGE}:${ARGILLA_VERSION} AS base
+FROM ${EXTRALIT_SERVER_IMAGE}:${EXTRALIT_VERSION} AS base
 USER root
 
 # Copy HF-Space startup scripts and Procfile
