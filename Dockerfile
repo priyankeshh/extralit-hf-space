@@ -11,7 +11,6 @@ COPY scripts/start.sh /home/argilla/start.sh
 COPY Procfile /home/argilla/Procfile
 COPY requirements.txt /packages/requirements.txt
 COPY app.py /home/argilla/app.py
-COPY worker.py /home/argilla/worker.py
 
 # Install required APT dependencies
 RUN apt-get update && \
