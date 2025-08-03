@@ -61,4 +61,5 @@ jobs:
             EXTRALIT_VERSION=${{ env.IMAGE_TAG }}
           tags: |
             ${{ env.REPO }}:${{ env.IMAGE_TAG }}
+            ${{ env.REPO }}:latest
           push: true
