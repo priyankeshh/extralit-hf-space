@@ -36,7 +36,8 @@ RUN mkdir -p /data && chown argilla:argilla /data
 
 # Install Elasticsearch (pinned) and fix permissions
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends elasticsearch=8.17.0 && \
-    chown -R argilla:argilla /usr/share/elasticsearch /etc/elasticsearch /var/lib/elasticsearch /var/log/elasticsearch
+    chown -R argilla:argilla /usr/share/elasticsearch /etc/elasticsearch /var/lib/elasticsearch /var/log/elasticsearch && \
+    chown argilla:argilla /etc/default/elasticsearch
 
 # Install Redis server
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends redis

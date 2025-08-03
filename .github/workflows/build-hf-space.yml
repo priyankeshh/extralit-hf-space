@@ -54,7 +54,7 @@ jobs:
           username: ${{ env.DOCKER_USERNAME }}
           password: ${{ env.DOCKER_PASSWORD }}
 
-      - name: Build & push HF-Space Docker image
+      - name: Build & push extralit-hf-space Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
