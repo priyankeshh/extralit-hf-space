@@ -16,5 +16,5 @@ fi
 export USERNAME="${USERNAME:-$DEFAULT_USERNAME}"
 export PASSWORD="${PASSWORD:-$(pwgen -s 16 1)}"
 
-# Start Elasticsearch, Redis, Argilla & extraction processes
+# Start Elasticsearch, Redis, Extralit & extraction processes
 honcho start

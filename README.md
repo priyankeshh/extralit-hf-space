@@ -1,7 +1,7 @@
 # HF-Space Microservice
 
 A standalone microservice providing PDF text extraction via PyMuPDF (AGPL-3.0) and an RQ worker for asynchronous processing.  
-This service is designed to live in its own container/repository so that your main `extralit/argilla-server` codebase can remain under Apache-2.0, avoiding direct linkage to AGPL-licensed code.
+This service is designed to live in its own container/repository so that your main `extralit/extralit-server` codebase can remain under Apache-2.0, avoiding direct linkage to AGPL-licensed code.
 
 ## Features
 
@@ -67,7 +67,7 @@ Build the container (multi-arch):
 ```bash
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t extralit/argilla-hf-spaces:<tag> \
+  -t extralit/extralit-hf-spaces:<tag> \
   .
 ```
 
@@ -78,7 +78,7 @@ docker run -d \
   -e REDIS_URL=redis://host.docker.internal:6379/0 \
   -e ELASTICSEARCH_HOST=http://host.docker.internal:9200 \
   -p 80:80 \
-  extralit/argilla-hf-spaces:<tag>
+  extralit/extralit-hf-spaces:<tag>
 ```
 
 ## Configuration / Environment Variables
@@ -108,10 +108,10 @@ curl -X POST http://localhost:80/extract \
 
 ## RQ Worker
 
-Enqueue jobs in your Argilla server:
+Enqueue jobs in your Extralit server:
 
 ```python
-from argilla_server.jobs.pymupdf_jobs import extract_text_remote
+from extralit_server.jobs.pymupdf_jobs import extract_text_remote
 
 # file_bytes = open("doc.pdf","rb").read()
 job = extract_text_remote.delay(file_bytes, document_id="1234")
@@ -123,4 +123,4 @@ Redis queue name: `pymupdf`
 ## License
 
 This repository and container are licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).  
-All AGPL-licensed code (PyMuPDF) remains fully contained here. Your main `extralit/argilla-server` codebase remains Apache-2.0.
+All AGPL-licensed code (PyMuPDF) remains fully contained here. Your main `extralit/extralit-server` codebase remains Apache-2.0.
