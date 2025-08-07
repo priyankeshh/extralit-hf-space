@@ -34,6 +34,12 @@ jobs:
             echo "EXTRALIT_SERVER_IMAGE=extralit/extralit-server" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME }}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD }}" >> $GITHUB_ENV
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
+            echo "REPO=extralit/extralit-hf-space" >> $GITHUB_ENV
+            echo "EXTRALIT_SERVER_IMAGE=extralit/extralit-server" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD }}" >> $GITHUB_ENV
           else
             echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
             echo "REPO=extralitdev/extralit-hf-space" >> $GITHUB_ENV
