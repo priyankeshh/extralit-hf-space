@@ -8,6 +8,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "scripts/**"
+      - "config/**"
+      - "*.py"
+      - "Dockerfile"
+      - "Procfile"
+      - "requirements.txt"
 
 jobs:
   build:
