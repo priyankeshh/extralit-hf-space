@@ -1,0 +1,109 @@
+Extralit HF Space NOTICE
+========================
+
+This NOTICE file provides licensing and usage-boundary information for third‑party
+software included in (or used by) this repository / container image, with special
+attention to components licensed under the GNU Affero General Public License
+(AGPL) and how they are isolated from the core Extralit server codebase.
+
+-------------------------------------------------------------------------------
+Project Licensing Summary
+-------------------------------------------------------------------------------
+1. Core Extralit Server & Related Source (outside the isolated extraction
+   microservice) are licensed under the Apache License, Version 2.0 (Apache-2.0).
+
+2. The PDF Extraction Microservice located in this repository (see `app.py`
+   under `extralit-hf-space/`) intentionally imports and uses:
+   - PyMuPDF (a/k/a `fitz`) – Licensed under the GNU Affero General Public
+     License, version 3 (AGPL-3.0).
+   - pymupdf4llm – Also distributed under AGPL-3.0 (it depends on PyMuPDF and
+     provides higher-level LLM / Markdown extraction utilities).
+
+3. No other Extralit Apache-2.0 modules import or link against PyMuPDF or
+   pymupdf4llm. Their usage is *confined to a distinct, optional runtime
+   process* (a FastAPI application) intended to run as an isolated service
+   (e.g., a separate process invoked via Procfile or a Unix Domain Socket).
+
+-------------------------------------------------------------------------------
+Isolation / Usage Boundary
+-------------------------------------------------------------------------------
+- The AGPL-licensed libraries (PyMuPDF, pymupdf4llm) are only loaded within
+  the dedicated extraction microservice defined by `app.py`.
+- The main Extralit application code under Apache-2.0 can function without
+  directly importing or distributing derivative code based on PyMuPDF; it
+  communicates over an internal HTTP or Unix Domain Socket boundary.
+- This design aims to limit AGPL copyleft obligations *to the components that
+  actually combine with or run AGPL code*, while keeping the primary server
+  codebase under Apache-2.0. (Consult qualified legal counsel for definitive
+  compliance guidance—this document is not legal advice.)
+
+If you deploy the extraction service publicly over a network (SaaS scenario),
+AGPL Section 13 requires that you offer the Corresponding Source for the
+AGPL-covered components (and any modifications you made to them).
+
+-------------------------------------------------------------------------------
+Obtaining Source Code for AGPL Components
+-------------------------------------------------------------------------------
+Upstream sources (unmodified in this repository) are available at:
+- PyMuPDF:       https://github.com/pymupdf/PyMuPDF
+- pymupdf4llm:   https://github.com/pymupdf/pymupdf4llm
+
+The minimal glue / integration code we authored that *uses* these libraries
+and produces hierarchical Markdown extraction is contained in:
+- `extralit-hf-space/app.py`
+
+That file is provided under Apache-2.0 (for our original portions). However,
+because it imports and runs AGPL libraries in-process, distributing a compiled
+artifact or offering a network service that executes that code may trigger AGPL
+obligations (notably providing corresponding source, including our modifications
+to that file and any other changes that form a combined work). We have not
+modified the PyMuPDF or pymupdf4llm libraries themselves inside this repository.
+
+-------------------------------------------------------------------------------
+How to Remove / Replace AGPL Components
+-------------------------------------------------------------------------------
+If you prefer not to use AGPL-licensed code:
+1. Exclude the extraction microservice from your build (remove or comment out
+   its Procfile entry, or do not run `uvicorn app:app ...`).
+2. Replace it with an alternative PDF text extraction mechanism using permissive
+   licenses (e.g., pdfminer.six, Apache Tika, or other tools) and adjust the
+   calling code accordingly.
+3. Ensure no remaining imports of `fitz` or `pymupdf4llm` persist in the Apache-2.0
+   layers of your deployment.
+
+-------------------------------------------------------------------------------
+Runtime Notes
+-------------------------------------------------------------------------------
+- The extraction process may run via a Unix Domain Socket (UDS) for local-only
+  access, reinforcing that only internal trusted components can invoke AGPL
+  functionality.
+- Environment variables (documented in `app.py`) control size limits, logging,
+  and optional writing of extracted Markdown for debugging.
+
+-------------------------------------------------------------------------------
+Trademark & Attribution
+-------------------------------------------------------------------------------
+"PyMuPDF" and related marks are the property of their respective owners.
+All third-party licenses and trademarks are acknowledged.
+
+-------------------------------------------------------------------------------
+NO WARRANTY
+-------------------------------------------------------------------------------
+All software is provided "AS IS", without warranty of any kind, express or
+implied, including but not limited to the warranties of merchantability,
+fitness for a particular purpose, and noninfringement.
+
+-------------------------------------------------------------------------------
+Contact
+-------------------------------------------------------------------------------
+For questions about how this repository structures license boundaries or to
+request a copy of any corresponding source we have modified relating to the
+AGPL components, contact: legal@extralit.ai (placeholder – adjust as needed).
+
+-------------------------------------------------------------------------------
+License Text References
+-------------------------------------------------------------------------------
+- Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
+- AGPL-3.0: https://www.gnu.org/licenses/agpl-3.0.en.html
+
+End of NOTICE
