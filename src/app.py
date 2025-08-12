@@ -53,8 +53,17 @@ async def info():
 
 @app.post("/extract")
 async def extract(pdf: UploadFile) -> JSONResponse:
+    if not pdf.filename or not pdf.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported")
+    
     try:
-        markdown, metadata = extract_markdown_with_hierarchy(data, pdf.filename or "document.pdf")
+        # Read PDF bytes
+        pdf_bytes = await pdf.read()
+        if not pdf_bytes:
+            raise HTTPException(status_code=400, detail="Empty file uploaded")
+        
+        # Extract markdown using pymupdf
+        markdown, metadata = extract_markdown_with_hierarchy(pdf_bytes, pdf.filename or "document.pdf")
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
