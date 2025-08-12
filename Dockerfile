@@ -15,21 +15,27 @@ COPY src /home/extralit/src
 # Install required APT dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      apt-transport-https \
-      gnupg \
-      wget \
-      lsb-release && \
-    # Elasticsearch signing key
-    wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch \
-      | gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg && \
+    apt-transport-https \
+    gnupg \
+    wget \
+    lsb-release \
+    ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Add Elasticsearch repository
+RUN wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch \
+    | gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" \
-      | tee /etc/apt/sources.list.d/elastic-8.x.list && \
-    # Redis signing key
-    wget -qO - https://packages.redis.io/gpg \
-      | gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg && \
+    | tee /etc/apt/sources.list.d/elastic-8.x.list
+
+# Add Redis repository
+RUN wget -qO - https://packages.redis.io/gpg \
+    | gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" \
-      | tee /etc/apt/sources.list.d/redis.list && \
-    apt-get update
+    | tee /etc/apt/sources.list.d/redis.list
+
+RUN apt-get update
 
 # Create data directory
 RUN mkdir -p /data && chown extralit:extralit /data
