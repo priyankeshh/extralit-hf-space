@@ -55,7 +55,7 @@ hf-space/
 4. Launch the API and worker (in separate terminals):
    ```bash
    # Terminal 1 — API
-   uvicorn app:app --host 0.0.0.0 --port 80
+   uvicorn src.app:app --host 0.0.0.0 --port 80
 
    # Terminal 2 — Worker
    python worker.py

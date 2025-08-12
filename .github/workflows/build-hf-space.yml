@@ -5,16 +5,6 @@ on:
     types:
       - build-hf-space
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "scripts/**"
-      - "config/**"
-      - "*.py"
-      - "Dockerfile"
-      - "Procfile"
-      - "requirements.txt"
 
 jobs:
   build:
@@ -41,19 +31,32 @@ jobs:
             echo "EXTRALIT_SERVER_IMAGE=extralit/extralit-server" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME }}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD }}" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "PLATFORMS=linux/amd64,linux/arm64" >> $GITHUB_ENV
-            echo "REPO=extralit/extralit-hf-space" >> $GITHUB_ENV
-            echo "EXTRALIT_SERVER_IMAGE=extralit/extralit-server" >> $GITHUB_ENV
-            echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME }}" >> $GITHUB_ENV
-            echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD }}" >> $GITHUB_ENV
-          else
+          elif [[ "${{ github.event_name }}" == "repository_dispatch" ]] && [[ "${{ github.event.client_payload.is_release }}" != "true" ]]; then
             echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
             echo "REPO=extralitdev/extralit-hf-space" >> $GITHUB_ENV
             echo "EXTRALIT_SERVER_IMAGE=extralitdev/extralit-server" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME_DEV }}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD_DEV }}" >> $GITHUB_ENV
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
+            echo "REPO=extralit/extralit-hf-space" >> $GITHUB_ENV
+            echo "EXTRALIT_SERVER_IMAGE=extralit/extralit-server" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD }}" >> $GITHUB_ENV
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ "${{ github.ref_name }}" == "develop" ]]; then
+            echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
+            echo "REPO=extralitdev/extralit-hf-space" >> $GITHUB_ENV
+            echo "EXTRALIT_SERVER_IMAGE=extralitdev/extralit-server" >> $GITHUB_ENV
+            echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME_DEV }}" >> $GITHUB_ENV
+            echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD_DEV }}" >> $GITHUB_ENV
+          else
+            echo "SKIP_BUILD=true" >> $GITHUB_ENV
+            echo "No matching event/branch criteria. Skipping build." >> $GITHUB_ENV
           fi
+
+      - name: Skip build (no matching criteria)
+        if: env.SKIP_BUILD == 'true'
+        run: exit 1
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -80,22 +83,10 @@ jobs:
             ${{ env.REPO }}:latest
           push: true
 
-    # TODO: uncomment this once the step works again
-      # - name: Docker Hub Description for `extralit-server`
-      #   uses: peter-evans/dockerhub-description@v4
-      #   if: ${{ env.PUBLISH_LATEST == 'true' }}
-      #   with:
-      #     username: ${{ env.DOCKER_USERNAME }}
-      #     password: ${{ env.DOCKER_PASSWORD }}
-      #     repository: $${{ env.SERVER_DOCKER_IMAGE }}
-      #     readme-filepath: extralit-server/docker/server/README.md
-      # TODO: uncomment this once the step works again
-      # - name: Docker Hub Description for `argilla-hf-spaces`
-      #   uses: peter-evans/dockerhub-description@v4
-      #   if: ${{ env.PUBLISH_LATEST == 'true' }}
-      #   with:
-      #     username: ${{ env.DOCKER_USERNAME }}
-      #     password: ${{ env.DOCKER_PASSWORD }}
-      #     repository: $${{ env.HF_SPACES_DOCKER_IMAGE }}
-      #     readme-filepath: extralit-server/docker/extralit-hf-space/README.md
-
+      - name: Docker Hub Description for `extralit-hf-space`
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+          repository: ${{ env.REPO }}
+          readme-filepath: README.md

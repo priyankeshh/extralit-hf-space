@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
-pymupdf
+pymupdf4llm
 rq
 redis
 httpx

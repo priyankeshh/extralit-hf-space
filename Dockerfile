@@ -10,7 +10,7 @@ USER root
 COPY scripts/start.sh /home/extralit/start.sh
 COPY Procfile /home/extralit/Procfile
 COPY requirements.txt /packages/requirements.txt
-COPY app.py /home/extralit/app.py
+COPY src /home/extralit/src
 
 # Install required APT dependencies
 RUN apt-get update && \
