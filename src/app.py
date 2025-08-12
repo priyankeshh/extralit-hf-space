@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import os
 import time
+import json
 import hashlib
 import logging
 from pathlib import Path
@@ -15,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import PlainTextResponse
 from .extract import extract_markdown_with_hierarchy
-from .schemas import ExtractionResponse, ExtractionMetadata, ErrorResponse
+from .schemas import ExtractionResponse, PDFMetadata, ErrorResponse
 
 
 _LOG_LEVEL = "DEBUG" if os.getenv("PDF_ENABLE_LOG_DEBUG", "0") == "1" else "INFO"
@@ -78,17 +79,36 @@ async def extract(
         if not pdf_bytes:
             raise HTTPException(status_code=400, detail="Empty file uploaded")
         
-        # Extract markdown using pymupdf
-        markdown, metadata = extract_markdown_with_hierarchy(pdf_bytes, pdf.filename or "document.pdf")
+        # Parse analysis metadata if provided
+        parsed_analysis_metadata = None
+        if analysis_metadata:
+            try:
+                parsed_analysis_metadata = json.loads(analysis_metadata)
+            except json.JSONDecodeError:
+                LOGGER.warning("Invalid JSON in analysis_metadata, ignoring")
         
-        # Create response metadata
-        extraction_metadata = ExtractionMetadata(**metadata)
+        # Extract markdown using pymupdf
+        markdown, extraction_metadata = extract_markdown_with_hierarchy(pdf_bytes, pdf.filename or "document.pdf")
         
         processing_time = time.time() - start_time
         
+        # Create PDFMetadata combining extraction results with analysis metadata
+        metadata_dict = {
+            "filename": pdf.filename or "document.pdf",
+            "processing_time": processing_time,
+            "page_count": extraction_metadata.get("pages"),
+            **extraction_metadata  # Include all pymupdf extraction metadata
+        }
+        
+        # Add analysis metadata if provided
+        if parsed_analysis_metadata:
+            metadata_dict["analysis_results"] = parsed_analysis_metadata
+        
+        pdf_metadata = PDFMetadata(**metadata_dict)
+        
         return ExtractionResponse(
             markdown=markdown,
-            metadata=extraction_metadata,
+            metadata=pdf_metadata,
             filename=pdf.filename,
             processing_time=processing_time
         )
