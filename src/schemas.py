@@ -1,19 +1,25 @@
 """
 Pydantic schemas for the extralit-hf-space API endpoints.
+Import schemas from extralit-server to maintain single source of truth.
 """
 
-from typing import Dict, Any, Optional
-from pydantic import BaseModel, Field
-
-# Import shared metadata schema from extralit-server
 try:
+    # Import all OCR schemas from extralit-server
+    from extralit_server.api.schemas.v1.document.ocr import (
+        ExtractionRequest,
+        ExtractionResponse,
+        PyMuPDFExtractionResult,
+        ErrorResponse
+    )
     from extralit_server.api.schemas.v1.document.preprocessing import PDFMetadata
+    
 except ImportError:
-    # Fallback for when extralit-server is not available
+    # Fallback schemas when extralit-server is not available
+    from typing import Dict, Any, Optional
+    from pydantic import BaseModel, Field
+    
     class PDFMetadata(BaseModel):
-        """
-        Fallback metadata schema when extralit-server is not available.
-        """
+        """Fallback metadata schema when extralit-server is not available."""
         filename: str
         processing_time: float
         page_count: Optional[int] = None
@@ -21,44 +27,36 @@ except ImportError:
         processing_settings: Optional[Dict] = None
         analysis_results: Optional[Dict] = None
 
+    class ExtractionRequest(BaseModel):
+        """Fallback request schema."""
+        file_url: Optional[str] = None
+        analysis_metadata: Optional[PDFMetadata] = None
+        extraction_config: Optional[Dict[str, Any]] = None
 
-class ExtractionRequest(BaseModel):
-    """
-    Request schema for PDF extraction endpoint.
-    
-    This schema represents the metadata and configuration for PDF extraction.
-    The actual PDF file is sent as a multipart upload.
-    """
-    
-    file_url: Optional[str] = Field(
-        None, 
-        description="Optional URL to the PDF file if hosted externally"
-    )
-    analysis_metadata: Optional[PDFMetadata] = Field(
-        None,
-        description="Analysis and preprocessing metadata from extralit-server"
-    )
-    extraction_config: Optional[Dict[str, Any]] = Field(
-        None,
-        description="Custom extraction configuration parameters"
-    )
+    class ExtractionResponse(BaseModel):
+        """Fallback response schema."""
+        markdown: str = Field(..., description="Extracted markdown content")
+        metadata: PDFMetadata = Field(..., description="Extraction and processing metadata")
+        filename: Optional[str] = Field(None, description="Original filename of the PDF")
+        processing_time: Optional[float] = Field(None, description="Time taken for extraction in seconds")
 
+    class PyMuPDFExtractionResult(BaseModel):
+        """Fallback extraction result schema."""
+        markdown: str
+        metadata: Dict[str, Any]
+        filename: Optional[str] = None
+        processing_time: Optional[float] = None
 
-class ExtractionResponse(BaseModel):
-    """
-    Response schema for PDF extraction endpoint.
-    """
-    
-    markdown: str = Field(..., description="Extracted markdown content")
-    metadata: PDFMetadata = Field(..., description="Extraction and processing metadata")
-    filename: Optional[str] = Field(None, description="Original filename of the PDF")
-    processing_time: Optional[float] = Field(None, description="Time taken for extraction in seconds")
+    class ErrorResponse(BaseModel):
+        """Fallback error response schema."""
+        detail: str = Field(..., description="Error message")
+        error_code: Optional[str] = Field(None, description="Specific error code")
 
 
-class ErrorResponse(BaseModel):
-    """
-    Error response schema.
-    """
-    
-    detail: str = Field(..., description="Error message")
-    error_code: Optional[str] = Field(None, description="Specific error code for programmatic handling")
+__all__ = [
+    "ExtractionRequest",
+    "ExtractionResponse", 
+    "PyMuPDFExtractionResult",
+    "ErrorResponse",
+    "PDFMetadata",
+]
