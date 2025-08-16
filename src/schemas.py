@@ -8,7 +8,6 @@ try:
     from extralit_server.api.schemas.v1.document.ocr import (
         ExtractionRequest,
         ExtractionResponse,
-        PyMuPDFExtractionResult,
         ErrorResponse
     )
     from extralit_server.api.schemas.v1.document.preprocessing import PDFMetadata
@@ -40,13 +39,6 @@ except ImportError:
         filename: Optional[str] = Field(None, description="Original filename of the PDF")
         processing_time: Optional[float] = Field(None, description="Time taken for extraction in seconds")
 
-    class PyMuPDFExtractionResult(BaseModel):
-        """Fallback extraction result schema."""
-        markdown: str
-        metadata: Dict[str, Any]
-        filename: Optional[str] = None
-        processing_time: Optional[float] = None
-
     class ErrorResponse(BaseModel):
         """Fallback error response schema."""
         detail: str = Field(..., description="Error message")
@@ -56,7 +48,6 @@ except ImportError:
 __all__ = [
     "ExtractionRequest",
     "ExtractionResponse", 
-    "PyMuPDFExtractionResult",
     "ErrorResponse",
     "PDFMetadata",
 ]
