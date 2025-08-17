@@ -7,7 +7,8 @@ from rq import Worker, Queue
 from .jobs import extraction_jobs  # noqa: F401
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-QUEUES = os.getenv("RQ_QUEUES", "extraction").split(",")
+# Use pdf_queue as the primary queue for direct RQ communication
+QUEUES = os.getenv("RQ_QUEUES", "pdf_queue").split(",")
 
 def main():
     conn = redis.from_url(REDIS_URL)

@@ -229,14 +229,15 @@ def health_check() -> bool:
 
 
 # Queue names used by the service
-EXTRACTION_QUEUE = "extraction"
+PDF_QUEUE = "pdf_queue"  # Primary queue for direct RQ communication with extralit-server
+EXTRACTION_QUEUE = "extraction"  # Legacy queue for FastAPI endpoints
 CHUNKING_QUEUE = "chunking"
 EMBEDDING_QUEUE = "embedding"
 HIGH_PRIORITY_QUEUE = "high_priority"
 LOW_PRIORITY_QUEUE = "low_priority"
 
-# Default queue configuration
-DEFAULT_QUEUES = [HIGH_PRIORITY_QUEUE, EXTRACTION_QUEUE, LOW_PRIORITY_QUEUE, CHUNKING_QUEUE, EMBEDDING_QUEUE]
+# Default queue configuration - pdf_queue is primary
+DEFAULT_QUEUES = [PDF_QUEUE, HIGH_PRIORITY_QUEUE, EXTRACTION_QUEUE, LOW_PRIORITY_QUEUE, CHUNKING_QUEUE, EMBEDDING_QUEUE]
 
 
 def get_queue_by_priority(priority: str) -> Queue:
@@ -257,7 +258,7 @@ def get_queue_by_priority(priority: str) -> Queue:
     if priority_lower == "high":
         return get_queue(HIGH_PRIORITY_QUEUE)
     elif priority_lower == "normal":
-        return get_queue(EXTRACTION_QUEUE)
+        return get_queue(PDF_QUEUE)  # Use pdf_queue as default for direct RQ communication
     elif priority_lower == "low":
         return get_queue(LOW_PRIORITY_QUEUE)
     else:
