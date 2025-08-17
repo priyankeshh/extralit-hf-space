@@ -12,10 +12,12 @@ between Apache 2.0 licensed orchestration code and AGPL 3.0 licensed PyMuPDF pro
 # Import job functions to make them available to RQ workers
 from .extraction_jobs import (
     extract_pdf_markdown_job,
-    extract_pdf_with_config_job
+    extract_pdf_with_config_job,
+    batch_extract_pdfs_job
 )
 
 __all__ = [
     "extract_pdf_markdown_job",
-    "extract_pdf_with_config_job"
+    "extract_pdf_with_config_job",
+    "batch_extract_pdfs_job"
 ]

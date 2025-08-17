@@ -9,7 +9,7 @@ between Apache 2.0 orchestration code and AGPL 3.0 PyMuPDF processing code.
 import os
 import time
 import tempfile
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 
 # Import the existing extraction logic (AGPL code)
 from ..extract import extract_markdown_with_hierarchy, ExtractionConfig
@@ -137,3 +137,101 @@ def extract_pdf_with_config_job(
         analysis_metadata=analysis_metadata,
         extraction_config=config_dict
     )
+
+
+def batch_extract_pdfs_job(
+    pdf_files: List[Tuple[bytes, str]],
+    batch_id: str,
+    analysis_metadata: Optional[Dict[str, Any]] = None,
+    extraction_config: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    RQ job for batch processing multiple PDFs.
+
+    This job processes multiple PDF files in a single job, which can be more
+    efficient for small files or when processing related documents together.
+
+    Args:
+        pdf_files: List of tuples containing (pdf_bytes, filename)
+        batch_id: Unique identifier for this batch
+        analysis_metadata: Optional metadata applied to all files
+        extraction_config: Optional configuration applied to all files
+
+    Returns:
+        Dictionary containing batch results and metadata
+    """
+    job_start_time = time.time()
+    results = []
+    successful_extractions = 0
+    failed_extractions = 0
+
+    try:
+        _LOGGER.info(f"Starting batch extraction for {len(pdf_files)} files (batch_id: {batch_id})")
+
+        for i, (pdf_bytes, filename) in enumerate(pdf_files):
+            try:
+                # Extract each PDF using the main extraction function
+                result = extract_pdf_markdown_job(
+                    pdf_bytes=pdf_bytes,
+                    filename=filename,
+                    analysis_metadata=analysis_metadata,
+                    extraction_config=extraction_config
+                )
+
+                if result.get("ok", False):
+                    successful_extractions += 1
+                    results.append({
+                        "index": i,
+                        "filename": filename,
+                        "success": True,
+                        "markdown": result.get("markdown", ""),
+                        "metadata": result.get("metadata", {}),
+                        "processing_time": result.get("processing_time", 0)
+                    })
+                else:
+                    failed_extractions += 1
+                    results.append({
+                        "index": i,
+                        "filename": filename,
+                        "success": False,
+                        "error": result.get("error", "Unknown error"),
+                        "processing_time": result.get("processing_time", 0)
+                    })
+
+            except Exception as e:
+                failed_extractions += 1
+                results.append({
+                    "index": i,
+                    "filename": filename,
+                    "success": False,
+                    "error": str(e),
+                    "processing_time": 0
+                })
+                _LOGGER.warning(f"Failed to extract {filename} in batch {batch_id}: {e}")
+
+        total_processing_time = time.time() - job_start_time
+
+        # Return batch results
+        return {
+            "ok": True,
+            "batch_id": batch_id,
+            "total_files": len(pdf_files),
+            "successful_extractions": successful_extractions,
+            "failed_extractions": failed_extractions,
+            "results": results,
+            "total_processing_time": total_processing_time,
+            "average_processing_time": total_processing_time / len(pdf_files) if pdf_files else 0
+        }
+
+    except Exception as e:
+        # Handle batch-level errors
+        return {
+            "ok": False,
+            "batch_id": batch_id,
+            "error": str(e),
+            "total_files": len(pdf_files),
+            "successful_extractions": successful_extractions,
+            "failed_extractions": failed_extractions,
+            "results": results,
+            "total_processing_time": time.time() - job_start_time
+        }

@@ -7,7 +7,7 @@ import json
 import hashlib
 import logging
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import pymupdf4llm
 from fastapi import FastAPI, UploadFile, HTTPException, Request, Form
@@ -19,7 +19,7 @@ from rq.job import Job
 
 from .extract import extract_markdown_with_hierarchy
 from .schemas import ExtractionResponse, PDFMetadata, ErrorResponse, JobStatusResponse, ExtractionJobResponse
-from .redis_connection import get_queue, EXTRACTION_QUEUE, health_check
+from .redis_connection import get_queue, get_queue_by_priority, EXTRACTION_QUEUE, health_check
 from .config import get_config
 
 
@@ -200,6 +200,87 @@ async def enqueue_extraction_job(
     except Exception as e:
         LOGGER.exception(f"Failed to enqueue extraction job: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to enqueue job: {e}")
+
+
+@app.post("/jobs/batch-extract", response_model=ExtractionJobResponse)
+async def enqueue_batch_extraction_job(
+    files: List[UploadFile],
+    analysis_metadata: Optional[str] = Form(None, description="JSON string of analysis metadata"),
+    extraction_config: Optional[str] = Form(None, description="JSON string of extraction configuration"),
+    priority: str = Form("normal", description="Job priority (low, normal, high)")
+) -> ExtractionJobResponse:
+    """
+    Enqueue a batch PDF extraction job for multiple files.
+
+    This endpoint allows processing multiple PDF files in a single batch job,
+    which can be more efficient for related documents or small files.
+    """
+    try:
+        if not files:
+            raise HTTPException(status_code=400, detail="No files provided")
+
+        # Validate all files are PDFs
+        pdf_files = []
+        for file in files:
+            if not file.filename or not file.filename.lower().endswith('.pdf'):
+                raise HTTPException(status_code=400, detail=f"File {file.filename} is not a PDF")
+
+            pdf_bytes = await file.read()
+            if not pdf_bytes:
+                raise HTTPException(status_code=400, detail=f"File {file.filename} is empty")
+
+            pdf_files.append((pdf_bytes, file.filename))
+
+        # Parse optional metadata
+        parsed_analysis_metadata = None
+        if analysis_metadata:
+            try:
+                parsed_analysis_metadata = json.loads(analysis_metadata)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Invalid analysis_metadata JSON")
+
+        parsed_extraction_config = None
+        if extraction_config:
+            try:
+                parsed_extraction_config = json.loads(extraction_config)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="Invalid extraction_config JSON")
+
+        # Generate batch ID
+        import uuid
+        batch_id = str(uuid.uuid4())
+
+        # Get appropriate queue based on priority
+        queue = get_queue_by_priority(priority)
+
+        # Enqueue batch job
+        job = queue.enqueue(
+            "src.jobs.extraction_jobs.batch_extract_pdfs_job",
+            pdf_files=pdf_files,
+            batch_id=batch_id,
+            analysis_metadata=parsed_analysis_metadata,
+            extraction_config=parsed_extraction_config,
+            job_timeout=1800,  # 30 minutes for batch jobs
+            result_ttl=7200,   # Keep results for 2 hours
+            failure_ttl=86400, # Keep failed jobs for 24 hours
+            description=f"batch_extract:{len(pdf_files)}_files"
+        )
+
+        job_id = job.get_id()
+        LOGGER.info(f"Enqueued batch extraction job {job_id} for {len(pdf_files)} files (batch_id: {batch_id})")
+
+        return ExtractionJobResponse(
+            job_id=job_id,
+            status="queued",
+            message=f"Batch extraction job enqueued for {len(pdf_files)} files",
+            metadata={"batch_id": batch_id, "file_count": len(pdf_files)}
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        LOGGER.exception(f"Failed to enqueue batch extraction job: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to enqueue batch job: {e}")
 
 
 @app.get("/jobs/{job_id}/status", response_model=JobStatusResponse)

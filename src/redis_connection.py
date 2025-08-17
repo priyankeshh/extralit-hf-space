@@ -232,6 +232,33 @@ def health_check() -> bool:
 EXTRACTION_QUEUE = "extraction"
 CHUNKING_QUEUE = "chunking"
 EMBEDDING_QUEUE = "embedding"
+HIGH_PRIORITY_QUEUE = "high_priority"
+LOW_PRIORITY_QUEUE = "low_priority"
 
 # Default queue configuration
-DEFAULT_QUEUES = [EXTRACTION_QUEUE, CHUNKING_QUEUE, EMBEDDING_QUEUE]
+DEFAULT_QUEUES = [HIGH_PRIORITY_QUEUE, EXTRACTION_QUEUE, LOW_PRIORITY_QUEUE, CHUNKING_QUEUE, EMBEDDING_QUEUE]
+
+
+def get_queue_by_priority(priority: str) -> Queue:
+    """
+    Get the appropriate queue based on priority level.
+
+    Args:
+        priority: Priority level ("high", "normal", "low")
+
+    Returns:
+        Queue object for the specified priority
+
+    Raises:
+        ValueError: If priority is not recognized
+    """
+    priority_lower = priority.lower()
+
+    if priority_lower == "high":
+        return get_queue(HIGH_PRIORITY_QUEUE)
+    elif priority_lower == "normal":
+        return get_queue(EXTRACTION_QUEUE)
+    elif priority_lower == "low":
+        return get_queue(LOW_PRIORITY_QUEUE)
+    else:
+        raise ValueError(f"Unknown priority level: {priority}. Must be 'high', 'normal', or 'low'")
