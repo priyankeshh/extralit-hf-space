@@ -5,3 +5,5 @@ rq
 redis
 httpx
 honcho
+python-multipart
+pydantic
