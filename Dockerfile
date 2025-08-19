@@ -52,7 +52,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends re
 RUN pip install --no-cache-dir -r /packages/requirements.txt && \
     chmod +x /home/extralit/start.sh /home/extralit/Procfile && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl jq pwgen && \
-    apt-get remove -y wget gnupg && \
+    apt-get remove -y gnupg && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /packages
 
