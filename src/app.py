@@ -1,20 +1,70 @@
-from fastapi import FastAPI
+from __future__ import annotations
+
+import io
+import os
+import time
+import hashlib
+import logging
+from pathlib import Path
+from typing import Optional, Tuple
+
+import pymupdf4llm
+from fastapi import FastAPI, UploadFile, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import PlainTextResponse
+from .extract import extract_markdown_with_hierarchy
 
-app = FastAPI(title="Extralit PDF Extraction Service", version="1.0.0")
 
+_LOG_LEVEL = "DEBUG" if os.getenv("PDF_ENABLE_LOG_DEBUG", "0") == "1" else "INFO"
+logging.basicConfig(level=_LOG_LEVEL, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+LOGGER = logging.getLogger("pdf-markdown-service")
+
+app = FastAPI(
+    title="Extralit PDF Markdown Extraction Service",
+    version="0.1.0",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url="/openapi.json",  # can be disabled later if desired
+)
+
+# If you ever need CORS for cross-container scenarios (normally unnecessary for internal usage)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost", "http://127.0.0.1"],
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
 
+
 @app.get("/healthz")
 async def healthz():
-    return {"status": "ok", "service": "pdf-extraction-rq"}
+    return {"status": "ok", "service": "pdf-markdown"}
 
-@app.get("/")
-async def root():
-    return {"message": "RQ-based PDF extraction service", "status": "active"}
+
+@app.get("/info")
+async def info():
+    return {
+        "service": "pdf-markdown",
+        "pymupdf4llm_version": getattr(pymupdf4llm, "__version__", "unknown"),
+    }
+
+@app.post("/extract")
+async def extract(pdf: UploadFile) -> JSONResponse:
+    try:
+        markdown, metadata = extract_markdown_with_hierarchy(data, pdf.filename or "document.pdf")
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        LOGGER.exception("Unexpected extraction error")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
+    return JSONResponse(
+        {
+            "markdown": markdown,
+            "metadata": metadata,
+            "filename": pdf.filename,
+        }
+    )
