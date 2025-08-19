@@ -3,8 +3,8 @@ Simple test script to verify job imports work correctly.
 """
 
 import sys
-import os
-sys.path.insert(0, 'src')
+import sys
+sys.path.insert(0, '../src')
 
 def test_job_import():
     """Test that PDF extraction job can be imported."""

@@ -4,7 +4,7 @@ Test script to verify worker can start without errors.
 
 import sys
 import os
-sys.path.insert(0, 'src')
+sys.path.insert(0, '../src')
 
 def test_worker_startup():
     """Test that worker can be imported and initialized without errors."""

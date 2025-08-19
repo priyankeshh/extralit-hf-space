@@ -4,7 +4,7 @@ Simple integration test for PDF extraction job.
 
 import os
 import sys
-sys.path.insert(0, 'src')
+sys.path.insert(0, '../src')
 
 def test_job_registration():
     """Test that job can be enqueued."""
