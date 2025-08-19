@@ -21,8 +21,13 @@ except ImportError as e:
     logging.warning(f"extralit_server imports not available: {e}")
 
 # Import local extraction logic
-from ..extract import extract_markdown_with_hierarchy
-from ..redis_connection import get_redis_connection
+try:
+    from extract import extract_markdown_with_hierarchy
+    from redis_connection import get_redis_connection
+except ImportError:
+    # Fallback for relative imports when run as module
+    from ..extract import extract_markdown_with_hierarchy
+    from ..redis_connection import get_redis_connection
 
 _LOGGER = logging.getLogger(__name__)
 

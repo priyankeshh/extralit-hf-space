@@ -4,7 +4,12 @@ import redis
 from rq import Worker, Queue
 
 # Import PDF extraction jobs to register them
-from .jobs.pdf_extraction_jobs import extract_pdf_from_s3_job  # noqa: F401
+try:
+    from jobs.pdf_extraction_jobs import extract_pdf_from_s3_job  # noqa: F401
+    print("✅ Successfully imported PDF extraction jobs")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import PDF extraction jobs: {e}")
+    print("This is expected if extralit_server is not available in this environment")
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 # Primary queue for direct RQ communication with extralit-server
