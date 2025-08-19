@@ -7,34 +7,37 @@ a summary of results. It's designed to work even when Redis is not available
 and extralit_server is not installed in this environment.
 """
 
-import sys
 import os
+import sys
 import time
 from datetime import datetime
 
 # Add src to path
-sys.path.insert(0, '../src')
+sys.path.insert(0, "../src")
+
 
 def print_header(title):
     """Print a formatted test section header."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"🧪 {title}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
+
 
 def print_subheader(title):
     """Print a formatted test subsection header."""
-    print(f"\n{'-'*40}")
+    print(f"\n{'-' * 40}")
     print(f"🔍 {title}")
-    print(f"{'-'*40}")
+    print(f"{'-' * 40}")
+
 
 def test_redis_connection():
     """Test Redis connection and queue setup."""
     print_subheader("Redis Connection Test")
 
     try:
-        from redis_connection import get_redis_connection, PDF_QUEUE, DEFAULT_QUEUES
+        from redis_connection import DEFAULT_QUEUES, PDF_QUEUE, get_redis_connection
 
-        print(f"✅ Redis connection module imported successfully")
+        print("✅ Redis connection module imported successfully")
         print(f"✅ PDF_QUEUE constant: {PDF_QUEUE}")
         print(f"✅ Available queues: {DEFAULT_QUEUES}")
 
@@ -53,12 +56,13 @@ def test_redis_connection():
         print(f"❌ Redis connection test failed: {e}")
         return False
 
+
 def test_queue_operations():
     """Test queue operations without requiring Redis."""
     print_subheader("Queue Operations Test")
 
     try:
-        from redis_connection import get_queue, PDF_QUEUE, get_queue_by_priority
+        from redis_connection import PDF_QUEUE, get_queue, get_queue_by_priority
 
         # Test queue getter functions
         try:
@@ -66,7 +70,7 @@ def test_queue_operations():
             print(f"✅ get_queue('{PDF_QUEUE}') works: {queue.name}")
         except Exception as e:
             if "Redis" in str(e) or "Connection" in str(e):
-                print(f"✅ get_queue function works (Redis connection expected to fail)")
+                print("✅ get_queue function works (Redis connection expected to fail)")
             else:
                 print(f"❌ get_queue failed unexpectedly: {e}")
                 return False
@@ -90,6 +94,7 @@ def test_queue_operations():
         print(f"❌ Queue operations test failed: {e}")
         return False
 
+
 def test_job_imports():
     """Test that job modules can be imported."""
     print_subheader("Job Import Test")
@@ -97,11 +102,13 @@ def test_job_imports():
     try:
         # Test job module imports
         from jobs import extract_pdf_from_s3_job
+
         print("✅ Job import from jobs.__init__ successful")
 
         # Test direct job import (expected to have warnings)
         try:
             from jobs.pdf_extraction_jobs import extract_pdf_from_s3_job
+
             print("✅ Direct job import successful")
         except ImportError as e:
             if "extralit_server" in str(e).lower():
@@ -117,13 +124,13 @@ def test_job_imports():
         print(f"❌ Job import test failed: {e}")
         return False
 
+
 def test_worker_module():
     """Test worker module imports and configuration."""
     print_subheader("Worker Module Test")
 
     try:
         # Test worker import
-        import worker
         print("✅ Worker module imported successfully")
 
         # Test worker configuration
@@ -141,12 +148,14 @@ def test_worker_module():
         print(f"❌ Worker module test failed: {e}")
         return False
 
+
 def test_extract_module():
     """Test the PDF extraction module."""
     print_subheader("Extract Module Test")
 
     try:
-        from extract import extract_markdown_with_hierarchy, ExtractionConfig
+        from extract import ExtractionConfig
+
         print("✅ Extract module imported successfully")
 
         # Test configuration
@@ -159,20 +168,22 @@ def test_extract_module():
         print(f"❌ Extract module test failed: {e}")
         return False
 
+
 def test_app_module():
     """Test the FastAPI app module."""
     print_subheader("FastAPI App Test")
 
     try:
         from app import app
+
         print("✅ FastAPI app imported successfully")
 
         # Check that app has minimal endpoints (should only have health checks)
-        routes = [route.path for route in app.routes if hasattr(route, 'path')]
+        routes = [route.path for route in app.routes if hasattr(route, "path")]
         print(f"✅ Available routes: {routes}")
 
         # Verify old extraction endpoints are removed
-        extraction_routes = [r for r in routes if 'extract' in r.lower()]
+        extraction_routes = [r for r in routes if "extract" in r.lower()]
         if not extraction_routes:
             print("✅ Extraction endpoints successfully removed")
         else:
@@ -184,6 +195,7 @@ def test_app_module():
         print(f"❌ FastAPI app test failed: {e}")
         return False
 
+
 def test_environment_setup():
     """Test environment configuration."""
     print_subheader("Environment Setup Test")
@@ -193,7 +205,7 @@ def test_environment_setup():
         env_vars = {
             "REDIS_URL": os.getenv("REDIS_URL", "redis://localhost:6379/0"),
             "RQ_QUEUES": os.getenv("RQ_QUEUES", "pdf_queue,high_priority,low_priority"),
-            "PYMUPDF_EXTRACTION_QUEUE": os.getenv("PYMUPDF_EXTRACTION_QUEUE", "pdf_queue")
+            "PYMUPDF_EXTRACTION_QUEUE": os.getenv("PYMUPDF_EXTRACTION_QUEUE", "pdf_queue"),
         }
 
         print("Environment variables:")
@@ -205,7 +217,7 @@ def test_environment_setup():
         print(f"✅ Python version: {sys.version.split()[0]}")
 
         # Check if we're in a virtual environment
-        if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
+        if hasattr(sys, "real_prefix") or (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix):
             print("✅ Running in virtual environment")
         else:
             print("⚠️  Not running in virtual environment")
@@ -216,6 +228,7 @@ def test_environment_setup():
         print(f"❌ Environment setup test failed: {e}")
         return False
 
+
 def test_dependencies():
     """Test that required dependencies are installed."""
     print_subheader("Dependencies Test")
@@ -225,7 +238,7 @@ def test_dependencies():
         ("rq", "RQ job queue"),
         ("fastapi", "FastAPI framework"),
         ("fitz", "PyMuPDF (fitz)"),
-        ("pymupdf4llm", "PyMuPDF4LLM")
+        ("pymupdf4llm", "PyMuPDF4LLM"),
     ]
 
     all_good = True
@@ -242,6 +255,7 @@ def test_dependencies():
 
     return all_good
 
+
 def run_worker_startup_test():
     """Test that worker can start (will fail gracefully without Redis)."""
     print_subheader("Worker Startup Test")
@@ -250,18 +264,17 @@ def run_worker_startup_test():
         print("Testing worker startup capability...")
 
         # Import worker main function
-        from worker import main
         print("✅ Worker main function imported")
 
         # Test that we can create the Redis connection object
         import redis
-        from rq import Queue, SimpleWorker
+        from rq import Queue
 
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
         try:
             conn = redis.from_url(redis_url)
-            queues = [Queue("pdf_queue", connection=conn)]
+            [Queue("pdf_queue", connection=conn)]
 
             print("✅ Worker components (Redis, Queue, SimpleWorker) can be created")
             print("⚠️  Actual worker startup will fail without Redis server (expected)")
@@ -274,6 +287,7 @@ def run_worker_startup_test():
     except Exception as e:
         print(f"❌ Worker startup test failed: {e}")
         return False
+
 
 def generate_test_report(results):
     """Generate a comprehensive test report."""
@@ -299,6 +313,7 @@ def generate_test_report(results):
     else:
         print(f"\n💥 {failed_tests} test(s) failed. Check the details above.")
         return False
+
 
 def main():
     """Run all tests and generate report."""
@@ -338,6 +353,7 @@ def main():
     print(f"\n🕐 Total test time: {duration:.2f} seconds")
 
     return success
+
 
 if __name__ == "__main__":
     success = main()

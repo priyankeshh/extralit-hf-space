@@ -31,11 +31,10 @@ import os
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Sequence, Tuple, Dict, Any
+from typing import Any, Optional
 
 import fitz  # PyMuPDF
 import pymupdf4llm
-
 
 LOGGER = logging.getLogger("pdf-markdown-extract")
 
@@ -64,7 +63,7 @@ class ExtractionConfig:
 
     write_dir: Optional[Path | str] = None
     write_mode: str = "overwrite"  # or "skip"
-    margins: Tuple[int, int, int, int] = (0, 50, 0, 30)
+    margins: tuple[int, int, int, int] = (0, 50, 0, 30)
     header_detection_max_levels: int = 4
     header_detection_body_limit: int = 10
     safe_filename_timestamp: bool = True
@@ -108,7 +107,7 @@ def _safe_filename(
     suffix: str = ".md",
 ) -> str:
     """
-    Produce a safe filename for storage – includes truncated stem, optional hash + timestamp.
+    Produce a safe filename for storage - includes truncated stem, optional hash + timestamp.
     """
     stem = Path(original_name).stem[:80] or "document"
     parts = [stem]
@@ -164,7 +163,7 @@ def extract_markdown_with_hierarchy(
     original_filename: str,
     *,
     config: Optional[ExtractionConfig] = None,
-) -> Tuple[str, Dict[str, Any]]:
+) -> tuple[str, dict[str, Any]]:
     """
     Extract hierarchical Markdown from a PDF (bytes) using either the embedded
     Table of Contents (TOC) or a heuristic header identification fallback.
@@ -223,7 +222,7 @@ def extract_markdown_with_hierarchy(
 
     write_path = _write_markdown_if_configured(md_text, original_filename, cfg)
 
-    metadata: Dict[str, Any] = {
+    metadata: dict[str, Any] = {
         "pages": doc.page_count,
         "toc_entries": toc_entry_count,
         "headers_strategy": headers_strategy,
@@ -243,6 +242,7 @@ def extract_markdown_with_hierarchy(
 # ---------------------------------------------------------------------------
 # Convenience / Public API
 # ---------------------------------------------------------------------------
+
 
 def get_default_config() -> ExtractionConfig:
     """

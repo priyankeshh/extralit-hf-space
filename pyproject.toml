@@ -41,3 +41,62 @@ dev-dependencies = [
     "flake8",
     "mypy",
 ]
+
+[tool.ruff]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "F",    # Pyflakes (undefined names, logical issues)
+    "E7",   # Syntax/indentation errors
+    "E9",   # Runtime-like errors
+    "E4",   # Import-related errors (E401, E402, etc.)
+    "B012", # return in finally (can suppress real exceptions)
+    "B",    # flake8-bugbear (broader than just B012)
+    "C4",   # flake8-comprehensions
+    "I",    # isort (import sorting)
+    "UP",   # pyupgrade (modern Python syntax)
+    "ASYNC", # flake8-async - async/await specific rules
+    "PLE",   # pylint errors (includes await-outside-async)
+    "FAST",  # FastAPI-specific rules (valuable for your backend)
+    "RUF",   # ruff-specific rules
+]
+
+ignore = [
+    "E402",   # imports not at top (lazy / optional import patterns)
+    "B904",   # exception chaining (will phase in later)
+    "UP007",  # | union syntax modernization
+    "UP045",  # Optional[...] -> X | None modernization
+    "B027",   # empty abstract method not marked abstract
+    "B024",   # abstract base class without abstract methods
+    "B017",   # broad exception asserts in tests
+    "RUF012", # mutable class var typing inference
+    "B008",   # FastAPI Depends pattern
+    "FAST002" # FastAPI Depends suggestion
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403", "I001"]  # Ignore unused imports and wildcard imports in __init__.py
+"tests/*.py" = ["ASYNC", "F821", "F401"]  # More lenient async rules in tests (ignore undefined names like forward refs/fixtures)

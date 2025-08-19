@@ -1,4 +1,4 @@
-﻿"""
+"""
 RQ job implementations for PDF extraction using PyMuPDF.
 
 This module contains the actual job functions that are executed by RQ workers.
@@ -6,21 +6,22 @@ Following the rq_pymupdf reference implementation pattern for clean separation
 between Apache 2.0 orchestration code and AGPL 3.0 PyMuPDF processing code.
 """
 
-import os
+import logging
 import time
-import tempfile
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Any, Optional
 
 # Import the existing extraction logic (AGPL code)
-from ..extract import extract_markdown_with_hierarchy, ExtractionConfig
+from ..extract import ExtractionConfig, extract_markdown_with_hierarchy
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def extract_pdf_markdown_job(
     pdf_bytes: bytes,
     filename: str,
-    analysis_metadata: Optional[Dict[str, Any]] = None,
-    extraction_config: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    analysis_metadata: Optional[dict[str, Any]] = None,
+    extraction_config: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
     """
     RQ job for extracting hierarchical markdown from a PDF.
 
@@ -45,7 +46,7 @@ def extract_pdf_markdown_job(
                 "ok": False,
                 "error": "Empty PDF content provided",
                 "filename": filename,
-                "processing_time": time.time() - job_start_time
+                "processing_time": time.time() - job_start_time,
             }
 
         if not filename:
@@ -56,14 +57,12 @@ def extract_pdf_markdown_job(
         if extraction_config:
             try:
                 config = ExtractionConfig(**extraction_config)
-            except Exception as e:
+            except Exception:
                 # Log warning but continue with defaults
                 config = None
 
         # Extract markdown using existing logic
-        markdown, metadata = extract_markdown_with_hierarchy(
-            pdf_bytes, filename, config=config
-        )
+        markdown, metadata = extract_markdown_with_hierarchy(pdf_bytes, filename, config=config)
 
         # Calculate total processing time
         total_processing_time = time.time() - job_start_time
@@ -72,7 +71,7 @@ def extract_pdf_markdown_job(
         enhanced_metadata = {
             "filename": filename,
             "processing_time": total_processing_time,
-            **metadata  # Include all extraction metadata
+            **metadata,  # Include all extraction metadata
         }
 
         # Add analysis metadata if provided
@@ -85,29 +84,24 @@ def extract_pdf_markdown_job(
             "markdown": markdown,
             "metadata": enhanced_metadata,
             "filename": filename,
-            "processing_time": total_processing_time
+            "processing_time": total_processing_time,
         }
 
     except Exception as e:
         # Handle any errors
-        return {
-            "ok": False,
-            "error": str(e),
-            "filename": filename,
-            "processing_time": time.time() - job_start_time
-        }
+        return {"ok": False, "error": str(e), "filename": filename, "processing_time": time.time() - job_start_time}
 
 
 def extract_pdf_with_config_job(
     pdf_bytes: bytes,
     filename: str,
-    margins: Optional[Tuple[int, int, int, int]] = None,
+    margins: Optional[tuple[int, int, int, int]] = None,
     header_max_levels: Optional[int] = None,
     header_body_limit: Optional[int] = None,
     write_markdown: bool = False,
     output_dir: Optional[str] = None,
-    analysis_metadata: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    analysis_metadata: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
     """
     RQ job for PDF extraction with detailed configuration options.
 
@@ -132,19 +126,16 @@ def extract_pdf_with_config_job(
 
     # Use the main extraction job with custom config
     return extract_pdf_markdown_job(
-        pdf_bytes=pdf_bytes,
-        filename=filename,
-        analysis_metadata=analysis_metadata,
-        extraction_config=config_dict
+        pdf_bytes=pdf_bytes, filename=filename, analysis_metadata=analysis_metadata, extraction_config=config_dict
     )
 
 
 def batch_extract_pdfs_job(
-    pdf_files: List[Tuple[bytes, str]],
+    pdf_files: list[tuple[bytes, str]],
     batch_id: str,
-    analysis_metadata: Optional[Dict[str, Any]] = None,
-    extraction_config: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    analysis_metadata: Optional[dict[str, Any]] = None,
+    extraction_config: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
     """
     RQ job for batch processing multiple PDFs.
 
@@ -175,38 +166,38 @@ def batch_extract_pdfs_job(
                     pdf_bytes=pdf_bytes,
                     filename=filename,
                     analysis_metadata=analysis_metadata,
-                    extraction_config=extraction_config
+                    extraction_config=extraction_config,
                 )
 
                 if result.get("ok", False):
                     successful_extractions += 1
-                    results.append({
-                        "index": i,
-                        "filename": filename,
-                        "success": True,
-                        "markdown": result.get("markdown", ""),
-                        "metadata": result.get("metadata", {}),
-                        "processing_time": result.get("processing_time", 0)
-                    })
+                    results.append(
+                        {
+                            "index": i,
+                            "filename": filename,
+                            "success": True,
+                            "markdown": result.get("markdown", ""),
+                            "metadata": result.get("metadata", {}),
+                            "processing_time": result.get("processing_time", 0),
+                        }
+                    )
                 else:
                     failed_extractions += 1
-                    results.append({
-                        "index": i,
-                        "filename": filename,
-                        "success": False,
-                        "error": result.get("error", "Unknown error"),
-                        "processing_time": result.get("processing_time", 0)
-                    })
+                    results.append(
+                        {
+                            "index": i,
+                            "filename": filename,
+                            "success": False,
+                            "error": result.get("error", "Unknown error"),
+                            "processing_time": result.get("processing_time", 0),
+                        }
+                    )
 
             except Exception as e:
                 failed_extractions += 1
-                results.append({
-                    "index": i,
-                    "filename": filename,
-                    "success": False,
-                    "error": str(e),
-                    "processing_time": 0
-                })
+                results.append(
+                    {"index": i, "filename": filename, "success": False, "error": str(e), "processing_time": 0}
+                )
                 _LOGGER.warning(f"Failed to extract {filename} in batch {batch_id}: {e}")
 
         total_processing_time = time.time() - job_start_time
@@ -220,7 +211,7 @@ def batch_extract_pdfs_job(
             "failed_extractions": failed_extractions,
             "results": results,
             "total_processing_time": total_processing_time,
-            "average_processing_time": total_processing_time / len(pdf_files) if pdf_files else 0
+            "average_processing_time": total_processing_time / len(pdf_files) if pdf_files else 0,
         }
 
     except Exception as e:
@@ -233,5 +224,5 @@ def batch_extract_pdfs_job(
             "successful_extractions": successful_extractions,
             "failed_extractions": failed_extractions,
             "results": results,
-            "total_processing_time": time.time() - job_start_time
+            "total_processing_time": time.time() - job_start_time,
         }

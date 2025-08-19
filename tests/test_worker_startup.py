@@ -3,26 +3,31 @@ Test script to verify worker can start without errors.
 """
 
 import sys
-import os
-sys.path.insert(0, '../src')
+
+sys.path.insert(0, "../src")
+
 
 def test_worker_startup():
     """Test that worker can be imported and initialized without errors."""
     try:
         # Test basic imports
         from worker import main
+
         print("✅ Successfully imported worker main function")
 
         # Test job imports (with expected warnings about extralit_server)
         from jobs.pdf_extraction_jobs import extract_pdf_from_s3_job
+
         print("✅ Successfully imported PDF extraction job")
 
         # Test Redis connection setup
-        from redis_connection import get_redis_connection, PDF_QUEUE
+        from redis_connection import PDF_QUEUE, get_redis_connection
+
         print(f"✅ Redis connection setup successful, PDF_QUEUE: {PDF_QUEUE}")
 
         # Test RQ imports
         from rq import Queue, Worker
+
         print("✅ RQ imports successful")
 
         return True
@@ -33,6 +38,7 @@ def test_worker_startup():
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
         return False
+
 
 def test_queue_creation():
     """Test that queues can be created without Redis connection."""
@@ -55,6 +61,7 @@ def test_queue_creation():
     except Exception as e:
         print(f"❌ Queue creation failed: {e}")
         return False
+
 
 if __name__ == "__main__":
     print("🧪 Testing worker startup capabilities...")
