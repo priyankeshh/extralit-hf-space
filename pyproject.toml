@@ -1,0 +1,43 @@
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
+name = "extralit-hf-space"
+version = "0.1.0"
+description = "Extralit HuggingFace Space with Elasticsearch and Redis"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+packages = ["src"]
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pymupdf4llm",
+    "rq",
+    "redis",
+    "httpx",
+    "honcho",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "flake8",
+    "mypy",
+]
+
+[tool.pdm]
+package-dir = "src"
+
+[tool.pdm.build]
+includes = ["src/"]
+package-data = {"src" = ["*"]}
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "black",
+    "flake8",
+    "mypy",
+]
