@@ -1,28 +1,30 @@
-﻿import os
+import os
 import sys
 import redis
 from rq import Worker, Queue
 
-# Pre-import heavy libs (PyMuPDF imported by jobs module)
-from .jobs import extraction_jobs  # noqa: F401
+# Import PDF extraction jobs to register them
+from .jobs.pdf_extraction_jobs import extract_pdf_from_s3_job  # noqa: F401
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-# Use pdf_queue as the primary queue for direct RQ communication
-QUEUES = os.getenv("RQ_QUEUES", "pdf_queue").split(",")
+# Primary queue for direct RQ communication with extralit-server
+QUEUES = os.getenv("RQ_QUEUES", "pdf_queue,high_priority,low_priority").split(",")
 
 def main():
     conn = redis.from_url(REDIS_URL)
     queues = [Queue(name.strip(), connection=conn) for name in QUEUES if name.strip()]
-    
+
     # Windows compatibility: use SimpleWorker which doesn't fork
     if sys.platform.startswith('win'):
         from rq import SimpleWorker
         w = SimpleWorker(queues, connection=conn)
         print("🪟 Starting SimpleWorker for Windows compatibility...")
+        print(f"📋 Listening on queues: {[q.name for q in queues]}")
     else:
         w = Worker(queues, connection=conn)
         print("🐧 Starting standard Worker...")
-    
+        print(f"📋 Listening on queues: {[q.name for q in queues]}")
+
     w.work(logging_level="INFO")
 
 if __name__ == "__main__":
