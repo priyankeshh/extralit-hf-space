@@ -244,8 +244,35 @@ def extract_markdown_with_hierarchy(
 # ---------------------------------------------------------------------------
 
 
-def get_default_config() -> ExtractionConfig:
-    """
-    Return the process-wide default ExtractionConfig (derived from environment).
-    """
-    return _DEFAULT_CONFIG
+def should_extract_text(filename: str, file_metadata: dict[str, Any]) -> bool:
+    """Determine if text extraction should be performed for a file."""
+    if not filename.lower().endswith(".pdf"):
+        return False
+
+    if file_metadata.get("text_extracted", False):
+        return False
+
+    return True
+
+
+def create_extraction_config(
+    analysis_metadata: Optional[dict[str, Any]] = None, custom_config: Optional[dict[str, Any]] = None
+) -> dict[str, Any]:
+    """Create extraction configuration based on analysis metadata."""
+    config = {}
+
+    if analysis_metadata:
+        if "margins" in analysis_metadata:
+            margins = analysis_metadata["margins"]
+            if isinstance(margins, dict) and all(k in margins for k in ["left", "top", "right", "bottom"]):
+                config["margins"] = (margins["left"], margins["top"], margins["right"], margins["bottom"])
+
+        if analysis_metadata.get("has_headers"):
+            config["header_detection_max_levels"] = 6
+        else:
+            config["header_detection_max_levels"] = 3
+
+    if custom_config:
+        config.update(custom_config)
+
+    return config
