@@ -6,12 +6,6 @@ ARG EXTRALIT_SERVER_IMAGE=extralit/extralit-server
 FROM ${EXTRALIT_SERVER_IMAGE}:${EXTRALIT_VERSION} AS base
 USER root
 
-# Copy HF-Space startup scripts and Procfile
-COPY scripts/start.sh /home/extralit/start.sh
-COPY Procfile /home/extralit/Procfile
-COPY pyproject.toml /packages/pyproject.toml
-COPY src /home/extralit/src
-
 # Install required APT dependencies and add repositories (combined for better caching)
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -49,15 +43,18 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     chown -R extralit:extralit /usr/share/elasticsearch /etc/elasticsearch /var/lib/elasticsearch /var/log/elasticsearch && \
     chown extralit:extralit /etc/default/elasticsearch
 
+COPY scripts/start.sh /home/extralit/start.sh
+COPY Procfile /home/extralit/Procfile
+COPY pyproject.toml /packages/pyproject.toml
+COPY src /home/extralit/src
+COPY config/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
+
 # Install Python deps and clean up build dependencies
 RUN pip install --no-cache-dir /packages && \
     chmod +x /home/extralit/start.sh /home/extralit/Procfile && \
     apt-get remove -y gnupg && \
     apt-get autoremove -y && \
     rm -rf /packages
-
-# Copy Elasticsearch config
-COPY config/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
 
 USER extralit
 
