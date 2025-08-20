@@ -4,11 +4,10 @@ RQ job for PDF extraction using PyMuPDF with S3 integration.
 
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
-from extract import extract_markdown_with_hierarchy
 from extralit_server.api.schemas.v1.document.metadata import DocumentProcessingMetadata
 from extralit_server.contexts.files import download_file_content, get_minio_client
 from extralit_server.database import SyncSessionLocal
@@ -16,6 +15,8 @@ from extralit_server.jobs.queues import REDIS_CONNECTION
 from extralit_server.models.database import Document
 from rq import get_current_job
 from rq.decorators import job
+
+from extralit_ocr.extract import extract_markdown_with_hierarchy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def extract_pdf_from_s3_job(
             "filename": filename,
             "workspace_name": workspace_name,
             "workflow_step": "pymupdf_extraction",
-            "started_at": datetime.now(timezone.utc).isoformat(),
+            "started_at": datetime.now(UTC).isoformat(),
         }
     )
     current_job.save_meta()
@@ -84,7 +85,7 @@ def extract_pdf_from_s3_job(
                 metadata.text_extraction_metadata = TextExtractionMetadata(
                     extracted_text_length=len(markdown),
                     extraction_method="pymupdf4llm",
-                    text_extraction_completed_at=datetime.now(timezone.utc),
+                    text_extraction_completed_at=datetime.now(UTC),
                 )
 
                 document.metadata_ = metadata.model_dump()
@@ -92,7 +93,7 @@ def extract_pdf_from_s3_job(
                 _LOGGER.info(f"Updated document {document_id} metadata with extraction results")
 
         current_job.meta.update(
-            {"completed_at": datetime.now(timezone.utc).isoformat(), "success": True, "text_length": len(markdown)}
+            {"completed_at": datetime.now(UTC).isoformat(), "success": True, "text_length": len(markdown)}
         )
         current_job.save_meta()
 
@@ -100,8 +101,6 @@ def extract_pdf_from_s3_job(
 
     except Exception as e:
         _LOGGER.error(f"Error in PyMuPDF extraction for document {document_id}: {e}")
-        current_job.meta.update(
-            {"completed_at": datetime.now(timezone.utc).isoformat(), "success": False, "error": str(e)}
-        )
+        current_job.meta.update({"completed_at": datetime.now(UTC).isoformat(), "success": False, "error": str(e)})
         current_job.save_meta()
         raise

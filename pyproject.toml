@@ -6,8 +6,8 @@ build-backend = "pdm.backend"
 name = "extralit-hf-space"
 version = "0.1.0"
 description = "Extralit HuggingFace Space with Elasticsearch and Redis"
-license = {text = "MIT"}
-requires-python = ">=3.8"
+license = {text = "AGPL-3.0-or-later"}
+requires-python = ">=3.11"
 packages = ["extralit_ocr"]
 dependencies = [
     "fastapi",
@@ -21,10 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "black",
-    "flake8",
-    "mypy",
+    "ruff",
 ]
 
 [tool.pdm]
@@ -36,10 +33,7 @@ package-data = {"extralit_ocr" = ["*"]}
 
 [tool.uv]
 dev-dependencies = [
-    "pytest",
-    "black",
-    "flake8",
-    "mypy",
+    "ruff",
 ]
 
 [tool.ruff]
@@ -65,7 +59,7 @@ exclude = [
     "venv",
 ]
 line-length = 120
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
