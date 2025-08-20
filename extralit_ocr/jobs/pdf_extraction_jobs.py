@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
+from extract import extract_markdown_with_hierarchy
 from extralit_server.api.schemas.v1.document.metadata import DocumentProcessingMetadata
 from extralit_server.contexts.files import download_file_content, get_minio_client
 from extralit_server.database import SyncSessionLocal
@@ -15,8 +16,6 @@ from extralit_server.jobs.queues import REDIS_CONNECTION
 from extralit_server.models.database import Document
 from rq import get_current_job
 from rq.decorators import job
-
-from extract import extract_markdown_with_hierarchy
 
 _LOGGER = logging.getLogger(__name__)
 

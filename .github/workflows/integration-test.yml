@@ -57,6 +57,7 @@ jobs:
             -e USERNAME=extralit \
             -e PASSWORD=12345678 \
             -e API_KEY=extralit.apikey \
+            -e HF_HUB_DISABLE_TELEMETRY=1 \
             extralit-hf-space:latest
 
       - name: Copy oauth config to container
@@ -70,7 +71,7 @@ jobs:
           docker logs -f extralit-container &
           LOGS_PID=$!
           # Wait for the service to be ready
-          while ! curl -XGET http://localhost:6900/api/_status; do sleep 10; done
+          while ! curl -s -o /dev/null -XGET http://localhost:6900/api/_status; do sleep 10; done
           echo "✅ Services are ready!"
           # Stop log streaming
           kill $LOGS_PID || true

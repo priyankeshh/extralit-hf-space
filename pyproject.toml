@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Extralit HuggingFace Space with Elasticsearch and Redis"
 license = {text = "MIT"}
 requires-python = ">=3.8"
-packages = ["src"]
+packages = ["extralit_ocr"]
 dependencies = [
     "fastapi",
     "uvicorn[standard]",
@@ -28,11 +28,11 @@ dev = [
 ]
 
 [tool.pdm]
-package-dir = "src"
+package-dir = "extralit_ocr"
 
 [tool.pdm.build]
-includes = ["src/"]
-package-data = {"src" = ["*"]}
+includes = ["extralit_ocr/"]
+package-data = {"extralit_ocr" = ["*"]}
 
 [tool.uv]
 dev-dependencies = [
