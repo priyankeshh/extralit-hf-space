@@ -36,7 +36,7 @@ from typing import Any, Optional
 import fitz  # PyMuPDF
 import pymupdf4llm
 
-LOGGER = logging.getLogger("pdf-markdown-extract")
+LOGGER = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -249,10 +249,3 @@ def get_default_config() -> ExtractionConfig:
     Return the process-wide default ExtractionConfig (derived from environment).
     """
     return _DEFAULT_CONFIG
-
-
-__all__ = [
-    "ExtractionConfig",
-    "extract_markdown_with_hierarchy",
-    "get_default_config",
-]

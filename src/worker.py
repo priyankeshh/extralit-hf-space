@@ -1,36 +1,23 @@
-import os
 import sys
 
-import redis
-from rq import Queue, Worker
+from extralit_server.jobs.queues import REDIS_CONNECTION
+from rq import Worker
 
-# Import PDF extraction jobs to register them
-try:
-    from jobs.pdf_extraction_jobs import extract_pdf_from_s3_job  # noqa: F401
-
-    print("✅ Successfully imported PDF extraction jobs")
-except ImportError as e:
-    print(f"⚠️ Warning: Could not import PDF extraction jobs: {e}")
-    print("This is expected if extralit_server is not available in this environment")
-
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-# Primary queue for direct RQ communication with extralit-server
-QUEUES = os.getenv("RQ_QUEUES", "pdf_queue,high_priority,low_priority").split(",")
+from jobs.pdf_extraction_jobs import extract_pdf_from_s3_job  # noqa: F401
 
 
 def main():
-    conn = redis.from_url(REDIS_URL)
-    queues = [Queue(name.strip(), connection=conn) for name in QUEUES if name.strip()]
+    queues = []
 
     # Windows compatibility: use SimpleWorker which doesn't fork
     if sys.platform.startswith("win"):
         from rq import SimpleWorker
 
-        w = SimpleWorker(queues, connection=conn)
+        w = SimpleWorker(queues, connection=REDIS_CONNECTION)
         print("🪟 Starting SimpleWorker for Windows compatibility...")
         print(f"📋 Listening on queues: {[q.name for q in queues]}")
     else:
-        w = Worker(queues, connection=conn)
+        w = Worker(queues, connection=REDIS_CONNECTION)
         print("🐧 Starting standard Worker...")
         print(f"📋 Listening on queues: {[q.name for q in queues]}")
 

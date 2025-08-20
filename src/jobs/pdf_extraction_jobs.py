@@ -8,31 +8,20 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
+from extralit_server.api.schemas.v1.document.metadata import DocumentProcessingMetadata
+from extralit_server.contexts.files import download_file_content, get_minio_client
+from extralit_server.database import SyncSessionLocal
+from extralit_server.jobs.queues import REDIS_CONNECTION
+from extralit_server.models.database import Document
 from rq import get_current_job
 from rq.decorators import job
 
-# Import extralit_server modules for S3 and database operations
-try:
-    from extralit_server.api.schemas.v1.document.metadata import DocumentProcessingMetadata
-    from extralit_server.contexts.files import download_file_content, get_minio_client
-    from extralit_server.database import SyncSessionLocal
-    from extralit_server.models.database import Document
-except ImportError as e:
-    logging.warning(f"extralit_server imports not available: {e}")
-
-# Import local extraction logic
-try:
-    from extract import extract_markdown_with_hierarchy
-    from redis_connection import get_redis_connection
-except ImportError:
-    # Fallback for relative imports when run as module
-    from ..extract import extract_markdown_with_hierarchy
-    from ..redis_connection import get_redis_connection
+from extract import extract_markdown_with_hierarchy
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@job(queue="pdf_queue", connection=get_redis_connection(), timeout=900, result_ttl=3600)
+@job(queue="pdf_queue", connection=REDIS_CONNECTION, timeout=900, result_ttl=3600)
 def extract_pdf_from_s3_job(
     document_id: UUID, s3_url: str, filename: str, analysis_metadata: dict[str, Any], workspace_name: str
 ) -> dict[str, Any]:
