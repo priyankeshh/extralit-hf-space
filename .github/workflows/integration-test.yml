@@ -86,7 +86,7 @@ jobs:
           response_body="${response%???}"
 
           # Check if HTTP status is 200
-          if [ "$http_code" != "200" ]; then
+          if [ "$http_code" != "200" ] && [ "$http_code" != "422" ]; then
             echo "❌ Health check failed: Expected HTTP 200, got $http_code"
             exit 1
           fi

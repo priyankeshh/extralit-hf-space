@@ -22,6 +22,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "ruff",
+    "rq-dashboard",
 ]
 
 [tool.pdm]

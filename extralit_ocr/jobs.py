@@ -85,7 +85,7 @@ def pymupdf_to_markdown_job(
                 metadata.text_extraction_metadata = TextExtractionMetadata(
                     extracted_text_length=len(markdown),
                     extraction_method="pymupdf4llm",
-                    text_extraction_completed_at=datetime.now(UTC),
+                    text_extraction_completed_at=datetime.now(UTC).isoformat(),
                 )
 
                 document.metadata_ = metadata.model_dump()
