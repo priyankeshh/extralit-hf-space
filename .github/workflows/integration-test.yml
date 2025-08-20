@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main, develop ]
     paths:
-      - "src/**"
+      - "extralit_ocr/**"
       - "scripts/**"
       - "config/**"
       - "Procfile"
@@ -12,7 +12,7 @@ on:
   pull_request:
     types: [opened, edited, synchronize, reopened, ready_for_review]
     paths:
-      - "src/**"
+      - "extralit_ocr/**"
       - "scripts/**"
       - "config/**"
       - "Procfile"
