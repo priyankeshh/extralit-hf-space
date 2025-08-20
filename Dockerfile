@@ -45,7 +45,7 @@ RUN mkdir -p /data && chown extralit:extralit /data
 COPY scripts/start.sh /home/extralit/start.sh
 COPY Procfile /home/extralit/Procfile
 COPY pyproject.toml /packages/pyproject.toml
-COPY src /home/extralit/src
+COPY extralit_ocr /home/extralit/extralit_ocr
 COPY config/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
 
 # Install Python deps and clean up build dependencies
