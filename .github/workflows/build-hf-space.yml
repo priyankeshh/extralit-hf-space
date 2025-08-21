@@ -82,34 +82,23 @@ jobs:
             ${{ env.REPO }}:${{ env.IMAGE_TAG }}
             ${{ env.REPO }}:latest
           push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-      - name: Docker Hub Description for `extralit-hf-space`
-        uses: peter-evans/dockerhub-description@v4
-        with:
-          username: ${{ env.DOCKER_USERNAME }}
-          password: ${{ env.DOCKER_PASSWORD }}
-          repository: ${{ env.REPO }}
-          readme-filepath: README.md
+    # TODO: uncomment this once the step works again
+      # - name: Docker Hub Description for `extralit-server`
+      #   uses: peter-evans/dockerhub-description@v4
+      #   if: ${{ env.PUBLISH_LATEST == 'true' }}
+      #   with:
+      #     username: ${{ env.DOCKER_USERNAME }}
+      #     password: ${{ env.DOCKER_PASSWORD }}
+      #     repository: $${{ env.SERVER_DOCKER_IMAGE }}
+      #     readme-filepath: extralit-server/docker/server/README.md
+      # TODO: uncomment this once the step works again
+      # - name: Docker Hub Description for `argilla-hf-spaces`
+      #   uses: peter-evans/dockerhub-description@v4
+      #   if: ${{ env.PUBLISH_LATEST == 'true' }}
+      #   with:
+      #     username: ${{ env.DOCKER_USERNAME }}
+      #     password: ${{ env.DOCKER_PASSWORD }}
+      #     repository: $${{ env.HF_SPACES_DOCKER_IMAGE }}
+      #     readme-filepath: extralit-server/docker/extralit-hf-space/README.md
 
-      - name: Trigger HuggingFace Space Rebuild
-        if: env.REPO == 'extralitdev/extralit-hf-space'
-        run: |
-          python -m pip install --upgrade -q pip
-          pip install -q huggingface_hub
-          
-          python -c "
-          from huggingface_hub import HfApi
-          
-          # Create an instance of the HfApi class
-          api = HfApi()
-          
-          # Restart the space with factory reboot
-          api.restart_space(
-              repo_id='extralit-dev/public-demo', 
-              token='${{ secrets.HF_TOKEN_EXTRALIT_INTERNAL_TESTING }}', 
-              factory_reboot=True
-          )
-          print('Successfully triggered HuggingFace Space rebuild for extralit-dev/public-demo')
-          "

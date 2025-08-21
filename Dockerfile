@@ -6,13 +6,6 @@ ARG EXTRALIT_SERVER_IMAGE=extralit/extralit-server
 FROM ${EXTRALIT_SERVER_IMAGE}:${EXTRALIT_VERSION} AS base
 USER root
 
-# Copy HF-Space startup scripts and Procfile
-COPY scripts/start.sh /home/extralit/start.sh
-COPY Procfile /home/extralit/Procfile
-COPY pyproject.toml /packages/pyproject.toml
-COPY src /home/extralit/src
-
-# Install required APT dependencies and add repositories (combined for better caching)
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
@@ -23,7 +16,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     lsb-release \
     ca-certificates
 
-# Add Elasticsearch and Redis repositories (combined for better caching)
 RUN wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch \
     | gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" \
@@ -34,7 +26,6 @@ RUN wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch \
     | tee /etc/apt/sources.list.d/redis.list
 
 # Create data directory
-RUN mkdir -p /data && chown extralit:extralit /data
 
 # Install Elasticsearch, Redis and utilities with apt cache mount
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -49,15 +40,20 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     chown -R extralit:extralit /usr/share/elasticsearch /etc/elasticsearch /var/lib/elasticsearch /var/log/elasticsearch && \
     chown extralit:extralit /etc/default/elasticsearch
 
+RUN mkdir -p /data && chown extralit:extralit /data
+
+COPY scripts/start.sh /home/extralit/start.sh
+COPY Procfile /home/extralit/Procfile
+COPY pyproject.toml /packages/pyproject.toml
+COPY extralit_ocr /home/extralit/extralit_ocr
+COPY config/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
+
 # Install Python deps and clean up build dependencies
 RUN pip install --no-cache-dir /packages && \
     chmod +x /home/extralit/start.sh /home/extralit/Procfile && \
     apt-get remove -y gnupg && \
     apt-get autoremove -y && \
     rm -rf /packages
-
-# Copy Elasticsearch config
-COPY config/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
 
 USER extralit
 
