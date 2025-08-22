@@ -35,6 +35,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     elasticsearch=8.17.0 \
     redis \
     curl \
+    git \
     jq \
     pwgen && \
     chown -R extralit:extralit /usr/share/elasticsearch /etc/elasticsearch /var/lib/elasticsearch /var/log/elasticsearch && \
