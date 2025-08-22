@@ -7,7 +7,7 @@ name = "extralit-hf-space"
 version = "0.1.0"
 description = "Extralit HuggingFace Space with Elasticsearch and Redis"
 license = {text = "AGPL-3.0-or-later"}
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 packages = ["extralit_ocr"]
 dependencies = [
     "fastapi",

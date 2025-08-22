@@ -8,15 +8,15 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
+from rq import get_current_job
+from rq.decorators import job
+
+from extralit_ocr.extract import extract_markdown_with_hierarchy
 from extralit_server.api.schemas.v1.document.metadata import DocumentProcessingMetadata
 from extralit_server.contexts.files import download_file_content, get_minio_client
 from extralit_server.database import SyncSessionLocal
 from extralit_server.jobs.queues import OCR_QUEUE, REDIS_CONNECTION
 from extralit_server.models.database import Document
-from rq import get_current_job
-from rq.decorators import job
-
-from extralit_ocr.extract import extract_markdown_with_hierarchy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ def pymupdf_to_markdown_job(
                 from extralit_server.api.schemas.v1.document.metadata import TextExtractionMetadata
 
                 metadata.text_extraction_metadata = TextExtractionMetadata(
-                    extracted_text_length=len(markdown),
+                    markdown=markdown,
                     extraction_method="pymupdf4llm",
                     text_extraction_completed_at=datetime.now(UTC).isoformat(),
                 )
