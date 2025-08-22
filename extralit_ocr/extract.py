@@ -1,28 +1,3 @@
-"""
-Extraction utilities for converting PDF bytes into hierarchical Markdown using PyMuPDF
-(via pymupdf4llm). Designed to be independent from any specific web framework so it
-can be reused by FastAPI endpoints, RQ workers, or other orchestrators.
-
-Typical usage:
-
-    from .extract import extract_markdown_with_hierarchy, ExtractionConfig
-
-    markdown, meta = extract_markdown_with_hierarchy(pdf_bytes, "input.pdf")
-
-You can customize behavior with an `ExtractionConfig` instance:
-
-    cfg = ExtractionConfig(write_dir="~/out/md", write_mode="overwrite")
-    markdown, meta = extract_markdown_with_hierarchy(pdf_bytes, "input.pdf", config=cfg)
-
-Environment Variables (applied to the default config if not explicitly overridden):
-    PDF_MARKDOWN_WRITE_DIR        - Directory to write extracted Markdown (disabled if unset)
-    PDF_MARKDOWN_WRITE_MODE       - One of: overwrite | skip  (default: overwrite)
-    PDF_ACCEPT_CONTENT_TYPES      - Not used here (API layer concern)
-    PDF_MAX_BYTES                 - Not enforced here (API / caller concern)
-
-The module purposely avoids importing FastAPI to remain side-effect free for worker usage.
-"""
-
 from __future__ import annotations
 
 import hashlib
@@ -45,22 +20,6 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class ExtractionConfig:
-    """
-    Configuration controlling markdown extraction and optional persistence.
-
-    Attributes:
-        write_dir: Optional path (string or Path) to write extracted markdown files.
-                   If None, writing is disabled.
-        write_mode: 'overwrite' or 'skip'. When 'skip', existing files with the
-                    same generated name are not rewritten.
-        margins: 4-tuple (left, top, right, bottom) in PDF points passed to
-                 pymupdf4llm.to_markdown to trim headers / footers.
-        header_detection_max_levels: Max header levels for IdentifyHeaders heuristic.
-        header_detection_body_limit: Body limit for IdentifyHeaders (heuristic tuning).
-        safe_filename_timestamp: If True, include unix timestamp in generated filename.
-        safe_filename_hash_len: Number of hex chars from sha1(original_name) to include.
-    """
-
     write_dir: Optional[Path | str] = None
     write_mode: str = "overwrite"  # or "skip"
     margins: tuple[int, int, int, int] = (0, 50, 0, 30)
@@ -93,11 +52,6 @@ def _default_config_from_env() -> ExtractionConfig:
 
 # Singleton default config (can be overridden per call)
 _DEFAULT_CONFIG = _default_config_from_env()
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 def _safe_filename(
@@ -151,11 +105,6 @@ def _write_markdown_if_configured(
         len(markdown_text),
     )
     return str(out_path)
-
-
-# ---------------------------------------------------------------------------
-# Core Extraction
-# ---------------------------------------------------------------------------
 
 
 def extract_markdown_with_hierarchy(
