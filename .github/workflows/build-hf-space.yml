@@ -45,14 +45,14 @@ jobs:
             echo "EXTRALIT_SERVER_IMAGE=extralit/extralit-server" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME }}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD }}" >> $GITHUB_ENV
-            echo "TAG_LATEST=true" >> $GITHUB_ENV
+            echo "TAG_LATEST=false" >> $GITHUB_ENV
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ "${{ github.ref_name }}" == "develop" ]]; then
             echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
             echo "REPO=extralitdev/extralit-hf-space" >> $GITHUB_ENV
             echo "EXTRALIT_SERVER_IMAGE=extralitdev/extralit-server" >> $GITHUB_ENV
             echo "DOCKER_USERNAME=${{ secrets.AR_DOCKER_USERNAME_DEV }}" >> $GITHUB_ENV
             echo "DOCKER_PASSWORD=${{ secrets.AR_DOCKER_PASSWORD_DEV }}" >> $GITHUB_ENV
-            echo "TAG_LATEST=false" >> $GITHUB_ENV
+            echo "TAG_LATEST=true" >> $GITHUB_ENV
           else
             echo "SKIP_BUILD=true" >> $GITHUB_ENV
             echo "No matching event/branch criteria. Skipping build." >> $GITHUB_ENV
